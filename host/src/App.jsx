@@ -1,32 +1,33 @@
 import React,{ Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
 
-// Import remote modules
 const ChatApp = React.lazy(() => import('chatApp/App'));
 const EmailApp = React.lazy(() => import('emailApp/App'));
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <div style={{ padding: '20px' }}>
-        <nav style={{ marginBottom: '20px' }}>
-          <ul style={{ display: 'flex', gap: '20px', listStyle: 'none', padding: 0 }}>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/chat">Chat</Link></li>
-            <li><Link to="/email">Email</Link></li>
-          </ul>
-        </nav>
-        
-        <Suspense fallback={<div>Loading...</div>}>
-          <Routes>
-            <Route path="/" element={<div>Welcome to the Host App!</div>} />
-            <Route path="/chat" element={<ChatApp />} />
-            <Route path="/email" element={<EmailApp />} />
-          </Routes>
-        </Suspense>
-      </div>
+      <Layout>
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <div className="flex-1">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            }>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/chat" element={<ChatApp />} />
+                <Route path="/email" element={<EmailApp />} />
+              </Routes>
+            </Suspense>
+          </div>
+        </div>
+      </Layout>
     </BrowserRouter>
   );
 }
-
-export default App;

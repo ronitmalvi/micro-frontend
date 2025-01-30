@@ -6,16 +6,21 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: 'chat',
+      name: 'chatApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App'
+        './App': './src/App.jsx'
       },
       shared: ['react', 'react-dom']
     })
   ],
   build: {
-    target: 'esnext',
     modulePreload: false,
+    target: 'esnext',
+    minify: false,
+    cssCodeSplit: false
+  },
+  server: {
+    port: 5001
   }
 });

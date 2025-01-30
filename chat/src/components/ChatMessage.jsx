@@ -1,27 +1,18 @@
-const ChatMessage = ({ message, isOwn }) => {
-    return (
-      <div className={`message ${isOwn ? 'own' : 'other'}`}
-        style={{
-          display: 'flex',
-          justifyContent: isOwn ? 'flex-end' : 'flex-start',
-          marginBottom: '10px'
-        }}>
-        <div style={{
-          backgroundColor: isOwn ? '#007bff' : '#e9ecef',
-          color: isOwn ? 'white' : 'black',
-          padding: '8px 12px',
-          borderRadius: '12px',
-          maxWidth: '70%'
-        }}>
-          {message.content}
-          <div style={{
-            fontSize: '0.7rem',
-            marginTop: '4px',
-            color: isOwn ? '#e9ecef' : '#666'
-          }}>
-            {new Date(message.timestamp).toLocaleTimeString()}
-          </div>
-        </div>
+import React from 'react';
+
+export default function ChatMessage({ message, isOwn }) {
+  return (
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div className={`
+        max-w-xs lg:max-w-md px-4 py-2 rounded-lg 
+        ${isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100'}
+      `}>
+        <p className="text-sm font-medium">{message.user}</p>
+        <p>{message.text}</p>
+        <p className="text-xs mt-1 opacity-75">
+          {new Date(message.timestamp).toLocaleTimeString()}
+        </p>
       </div>
-    );
-  };
+    </div>
+  );
+}

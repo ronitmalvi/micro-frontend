@@ -19,11 +19,13 @@ export default defineConfig({
           format: 'esm'
         }
       },
-      shared: ['react', 'react-dom']
+      shared: ['react', 'react-dom', 'react-router-dom']
     })
   ],
   build: {
-    target: 'esnext',
     modulePreload: false,
+    target: 'esnext',
+    minify: false,
+    cssCodeSplit: false
   }
 });

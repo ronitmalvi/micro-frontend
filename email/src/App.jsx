@@ -1,74 +1,79 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import EmailList from './components/EmailList';
+import EmailDetail from './components/EmailDetail';
+import ComposeEmail from './components/ComposeEmail';
 
 const initialEmails = [
   {
     id: 1,
-    subject: 'Welcome to Email App',
-    sender: 'system@email.com',
-    content: 'This is your first email in the system.',
-    date: '2024-01-29'
-  },
-  {
-    id: 2,
-    subject: 'Getting Started Guide',
-    sender: 'support@email.com',
-    content: 'Here are some tips to get you started...',
-    date: '2024-01-29'
+    subject: 'Welcome',
+    sender: 'system@example.com',
+    content: 'Welcome to the email application!',
+    date: new Date().toISOString(),
+    read: false
   }
 ];
 
-function App() {
-  const [emails] = useState(initialEmails);
+export default function App() {
+  const [emails, setEmails] = useState(initialEmails);
   const [selectedEmail, setSelectedEmail] = useState(null);
+  const [isComposing, setIsComposing] = useState(false);
+
+  const handleSelectEmail = (email) => {
+    setSelectedEmail(email);
+    if (!email.read) {
+      setEmails(emails.map(e => 
+        e.id === email.id ? { ...e, read: true } : e
+      ));
+    }
+  };
+
+  const handleSendEmail = (emailData) => {
+    const newEmail = {
+      id: Date.now(),
+      ...emailData,
+      sender: 'you@example.com',
+      date: new Date().toISOString(),
+      read: true
+    };
+    setEmails([newEmail, ...emails]);
+    setIsComposing(false);
+  };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <h2>Email Application</h2>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px' }}>
-        {/* Email List */}
-        <div style={{ borderRight: '1px solid #ccc', padding: '10px' }}>
-          {emails.map((email) => (
-            <div
-              key={email.id}
-              onClick={() => setSelectedEmail(email)}
-              style={{
-                padding: '10px',
-                borderBottom: '1px solid #eee',
-                cursor: 'pointer',
-                background: selectedEmail?.id === email.id ? '#f0f0f0' : 'white'
-              }}
-            >
-              <div style={{ fontWeight: 'bold' }}>{email.subject}</div>
-              <div style={{ fontSize: '0.9em', color: '#666' }}>{email.sender}</div>
-              <div style={{ fontSize: '0.8em', color: '#888' }}>{email.date}</div>
-            </div>
-          ))}
+    <div className="h-[calc(100vh-4rem)] flex">
+      <div className="w-80 border-r bg-white overflow-y-auto">
+        <div className="p-4 border-b">
+          <button
+            onClick={() => setIsComposing(true)}
+            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Compose
+          </button>
         </div>
-
-        {/* Email Content */}
-        <div style={{ padding: '10px' }}>
-          {selectedEmail ? (
-            <div>
-              <h3>{selectedEmail.subject}</h3>
-              <div style={{ margin: '10px 0', color: '#666' }}>
-                From: {selectedEmail.sender}
-                <br />
-                Date: {selectedEmail.date}
-              </div>
-              <div style={{ padding: '10px', background: '#f9f9f9', borderRadius: '4px' }}>
-                {selectedEmail.content}
-              </div>
-            </div>
-          ) : (
-            <div style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>
-              Select an email to view its content
-            </div>
-          )}
-        </div>
+        <EmailList
+          emails={emails}
+          selectedId={selectedEmail?.id}
+          onSelectEmail={handleSelectEmail}
+        />
       </div>
+      
+      <div className="flex-1 bg-white overflow-y-auto">
+        {selectedEmail ? (
+          <EmailDetail email={selectedEmail} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Select an email to read
+          </div>
+        )}
+      </div>
+
+      {isComposing && (
+        <ComposeEmail
+          onSubmit={handleSendEmail}
+          onCancel={() => setIsComposing(false)}
+        />
+      )}
     </div>
   );
 }
-
-export default App;
