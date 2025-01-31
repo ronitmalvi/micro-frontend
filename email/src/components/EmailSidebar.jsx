@@ -1,41 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Send, Paperclip, Inbox, Star, Trash2, Reply, MoreVertical, SendHorizontal, File, PenSquare } from 'lucide-react';
 
-export default function EmailSidebar({ currentFolder, onFolderChange, unreadCount }) {
+export default function EmailSidebar({ currentFolder, unreadCount, onCompose, onFolderChange }){
   const folders = [
-    { id: 'inbox', name: 'Inbox', icon: '📥' },
-    { id: 'sent', name: 'Sent', icon: '📤' },
-    { id: 'drafts', name: 'Drafts', icon: '📝' },
-    { id: 'trash', name: 'Trash', icon: '🗑️' }
+    { id: 'inbox', name: 'Inbox', icon: Inbox },
+    { id: 'sent', name: 'Sent', icon: SendHorizontal },
+    { id: 'drafts', name: 'Drafts', icon: File },
+    { id: 'trash', name: 'Trash', icon: Trash2 }
   ];
 
   return (
-    <div className="w-64 border-r bg-gray-50 p-4">
-      <button
-        onClick={() => onFolderChange('compose')}
-        className="w-full bg-blue-500 text-white rounded-lg px-4 py-2 mb-4 hover:bg-blue-600"
-      >
-        Compose
-      </button>
-      
-      <div className="space-y-2">
-        {folders.map(folder => (
+    <div className="w-64 border-r border-gray-200 flex flex-col">
+      <div className="p-4">
+        <button
+          onClick={onCompose}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-3 flex items-center gap-2 transition-colors"
+        >
+          <PenSquare className="w-5 h-5" />
+          <span>Compose</span>
+        </button>
+      </div>
+      <nav className="flex-1 px-3 space-y-1">
+        {folders.map(({ id, name, icon: Icon }) => (
           <button
-            key={folder.id}
-            onClick={() => onFolderChange(folder.id)}
-            className={`w-full text-left px-4 py-2 rounded-lg flex items-center justify-between
-              ${currentFolder === folder.id ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+            key={id}
+            onClick={() => onFolderChange(id)}
+            className={`
+              w-full px-4 py-3 rounded-lg flex items-center justify-between
+              ${currentFolder === id ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'}
+            `}
           >
-            <span className="flex items-center">
-              {folder.icon} <span className="ml-2">{folder.name}</span>
-            </span>
-            {folder.id === 'inbox' && unreadCount > 0 && (
-              <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+            <div className="flex items-center gap-3">
+              <Icon className="w-5 h-5" />
+              <span>{name}</span>
+            </div>
+            {id === 'inbox' && unreadCount > 0 && (
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
                 {unreadCount}
               </span>
             )}
           </button>
         ))}
-      </div>
+      </nav>
     </div>
   );
-}
+};

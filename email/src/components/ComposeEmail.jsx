@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Send, Paperclip, Inbox, Star, Trash2, Reply, MoreVertical, SendHorizontal, File, PenSquare } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 
-export default function ComposeEmail({ onClose, replyTo = null }) {
+export default function ComposeEmail({ replyTo, onClose, onSend }){
   const [email, setEmail] = useState({
     to: replyTo?.from || '',
     subject: replyTo ? `Re: ${replyTo.subject}` : '',
@@ -25,87 +26,86 @@ export default function ComposeEmail({ onClose, replyTo = null }) {
         'HMFLUKS7uM4oOsdpF'
       );
 
-      onClose({
+      onSend({
         id: Date.now(),
-        from: 'you@example.com',
+        from: 'user@example.com',
         ...email,
         date: new Date().toISOString(),
         read: true
       });
     } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again.');
+      console.error('Error:', error);
+      alert('Failed to send email');
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-3xl">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-lg font-semibold">
-            {replyTo ? 'Reply to Email' : 'New Email'}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-xl font-semibold">
+            {replyTo ? 'Reply' : 'New Message'}
           </h2>
           <button
-            onClick={() => onClose()}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div>
-            <input
-              type="email"
-              placeholder="To"
-              value={email.to}
-              onChange={e => setEmail({ ...email, to: e.target.value })}
-              className="w-full p-2 border rounded focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <input
-              type="text"
-              placeholder="Subject"
-              value={email.subject}
-              onChange={e => setEmail({ ...email, subject: e.target.value })}
-              className="w-full p-2 border rounded focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <textarea
-              placeholder="Write your message..."
-              value={email.content}
-              onChange={e => setEmail({ ...email, content: e.target.value })}
-              className="w-full p-2 border rounded h-64 resize-none focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <input
+            type="email"
+            placeholder="To"
+            value={email.to}
+            onChange={e => setEmail({ ...email, to: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Subject"
+            value={email.subject}
+            onChange={e => setEmail({ ...email, subject: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          />
+          <textarea
+            placeholder="Write your message..."
+            value={email.content}
+            onChange={e => setEmail({ ...email, content: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-64 resize-none"
+            required
+          />
+          <div className="flex justify-between items-center pt-4">
             <button
               type="button"
-              onClick={() => onClose()}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
             >
-              Cancel
             </button>
-            <button
-              type="submit"
-              disabled={sending}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
-            >
-              {sending ? 'Sending...' : 'Send'}
-            </button>
+            <div className="space-x-3 flex justify-center">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Discard
+              </button>
+              <button
+                type="submit"
+                disabled={sending}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 flex items-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                {sending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
   );
-}
+};

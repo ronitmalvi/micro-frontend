@@ -1,37 +1,33 @@
-// src/App.jsx
-import React,{ Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import LoadingSpinner from './components/LoadingSpinner';
 
 const ChatApp = React.lazy(() => import('chatApp/App').catch(() => ({
-  default: () => <div>Error loading Chat App</div>
+  default: () => <div className="text-red-500 text-center">Chat App Error</div>
 })));
 
 const EmailApp = React.lazy(() => import('emailApp/App').catch(() => ({
-  default: () => <div>Error loading Email App</div>
+  default: () => <div className="text-red-500 text-center">Email App Error</div>
 })));
 
 export default function App() {
   return (
     <BrowserRouter>
       <Layout>
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen bg-gray-50">
           <Sidebar />
-          <div className="flex-1">
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-            }>
+          <main className="flex-1 p-6">
+            <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/chat" element={<ChatApp />} />
                 <Route path="/email" element={<EmailApp />} />
               </Routes>
             </Suspense>
-          </div>
+          </main>
         </div>
       </Layout>
     </BrowserRouter>
