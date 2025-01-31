@@ -1,5 +1,3 @@
-Collecting workspace information
-
 # Micro-Frontend Architecture
 
 ## Directory Architecture
