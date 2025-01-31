@@ -1,92 +1,213 @@
-import React, { useState, useEffect } from 'react';
-import ChatHeader from './components/ChatHeader';
-import ChatList from './components/ChatList';
-import ChatInput from './components/ChatInput';
+// src/App.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+import { format } from 'date-fns';
 
-// Simulate a username for now - in a real app, this would come from authentication
-const username = `User_${Math.floor(Math.random() * 1000)}`;
+const SOCKET_URL = 'http://localhost:3001';
 
-export default function App() {
+const App = () => {
+  const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [username, setUsername] = useState('');
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [activeUsers, setActiveUsers] = useState(1);
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
-  // Simulate initial messages
+  // Socket initialization
   useEffect(() => {
-    const initialMessage = {
-      id: 1,
-      username: 'System',
-      text: `Welcome to the chat room, ${username}!`,
-      timestamp: new Date().toISOString(),
-      isRead: true
-    };
-    setMessages([initialMessage]);
-  }, []);
+    const newSocket = io(SOCKET_URL);
+    setSocket(newSocket);
 
-  // Simulate other users joining/leaving
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveUsers(prev => Math.max(1, prev + (Math.random() > 0.5 ? 1 : -1)));
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSendMessage = (text) => {
-    const newMessage = {
-      id: Date.now(),
-      username,
-      text,
-      timestamp: new Date().toISOString(),
-      isRead: false
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-
-    // Simulate message being read after 2 seconds
-    setTimeout(() => {
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === newMessage.id ? { ...msg, isRead: true } : msg
-        )
-      );
-    }, 2000);
-
-    // Simulate response after 1-3 seconds
-    if (Math.random() > 0.5) {
-      const delay = 1000 + Math.random() * 2000;
-      setTimeout(() => {
-        const response = {
-          id: Date.now(),
-          username: 'ChatBot',
-          text: `Thanks for your message: "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"`,
-          timestamp: new Date().toISOString(),
-          isRead: true
-        };
-        setMessages(prev => [...prev, response]);
-      }, delay);
+    // Generate random username if not set
+    if (!username) {
+      setUsername(`User${Math.floor(Math.random() * 10000)}`);
     }
+
+    return () => newSocket.close();
+  }, []);
+
+  // Socket event handlers
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('connect', () => {
+      socket.emit('user_join', { username });
+    });
+
+    socket.on('message', (message) => {
+      setMessages(prev => [...prev, message]);
+    });
+
+    socket.on('user_join', ({ username }) => {
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: `${username} joined the chat`,
+        timestamp: new Date()
+      }]);
+    });
+
+    socket.on('user_left', ({ username }) => {
+      setMessages(prev => [...prev, {
+        type: 'system',
+        content: `${username} left the chat`,
+        timestamp: new Date()
+      }]);
+    });
+
+    socket.on('online_users', (users) => {
+      setOnlineUsers(users);
+    });
+
+    socket.on('typing_start', ({ username }) => {
+      setTypingUsers(prev => new Set([...prev, username]));
+    });
+
+    socket.on('typing_end', ({ username }) => {
+      setTypingUsers(prev => {
+        const newSet = new Set([...prev]);
+        newSet.delete(username);
+        return newSet;
+      });
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('message');
+      socket.off('user_join');
+      socket.off('user_left');
+      socket.off('online_users');
+      socket.off('typing_start');
+      socket.off('typing_end');
+    };
+  }, [socket, username]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Handle typing indicator
+  const handleTyping = () => {
+    if (!socket) return;
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit('typing_start', { username });
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socket.emit('typing_end', { username });
+    }, 1000);
+  };
+
+  // Send message
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!messageInput.trim() || !socket) return;
+
+    const message = {
+      content: messageInput,
+      username,
+      timestamp: new Date(),
+      type: 'user'
+    };
+
+    socket.emit('message', message);
+    setMessageInput('');
+    setIsTyping(false);
+    socket.emit('typing_end', { username });
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col bg-white shadow-lg rounded-lg">
-      <ChatHeader activeUsers={activeUsers} />
-      
-      <ChatList 
-        messages={messages}
-        username={username}
-      />
-      
-      <div className="px-4 py-2">
-        {isTyping && (
-          <span className="text-sm text-gray-500">Someone is typing...</span>
-        )}
+    <div className="flex flex-col h-screen bg-gray-100">
+      {/* Header */}
+      <div className="bg-white shadow p-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold">Chat Room</h1>
+          <div className="text-sm text-gray-600">
+            Online Users: {onlineUsers.length}
+          </div>
+        </div>
       </div>
-      
-      <ChatInput 
-        onSendMessage={handleSendMessage}
-        isTyping={isTyping}
-        setIsTyping={setIsTyping}
-      />
+
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`${
+              message.type === 'system'
+                ? 'text-center text-gray-500 text-sm'
+                : message.username === username
+                ? 'flex justify-end'
+                : 'flex justify-start'
+            }`}
+          >
+            {message.type !== 'system' && (
+              <div
+                className={`max-w-[70%] break-words rounded-lg p-3 ${
+                  message.username === username
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-gray-800'
+                }`}
+              >
+                <div className="text-sm font-semibold mb-1">
+                  {message.username}
+                </div>
+                <div>{message.content}</div>
+                <div className="text-xs mt-1 opacity-75">
+                  {format(new Date(message.timestamp), 'HH:mm')}
+                </div>
+              </div>
+            )}
+            {message.type === 'system' && (
+              <div className="bg-gray-100 px-4 py-2 rounded-full">
+                {message.content}
+              </div>
+            )}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Typing Indicator */}
+      {typingUsers.size > 0 && (
+        <div className="px-4 py-2 text-sm text-gray-500">
+          {Array.from(typingUsers).join(', ')} 
+          {typingUsers.size === 1 ? ' is' : ' are'} typing...
+        </div>
+      )}
+
+      {/* Message Input */}
+      <form onSubmit={sendMessage} className="bg-white p-4 shadow-lg">
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
+            onKeyPress={handleTyping}
+            placeholder="Type a message..."
+            className="flex-1 rounded-lg border border-gray-300 p-2 focus:outline-none focus:border-blue-500"
+          />
+          <button
+            type="submit"
+            disabled={!messageInput.trim()}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+          >
+            Send
+          </button>
+        </div>
+      </form>
     </div>
   );
-}
+};
+
+export default App;

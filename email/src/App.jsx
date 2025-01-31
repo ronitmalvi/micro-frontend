@@ -1,79 +1,135 @@
-import React,{ useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
 import EmailList from './components/EmailList';
-import EmailDetail from './components/EmailDetail';
+import EmailView from './components/EmailView';
 import ComposeEmail from './components/ComposeEmail';
 
-const initialEmails = [
+// Mock data - replace with API calls in production
+const mockEmails = [
   {
     id: 1,
-    subject: 'Welcome',
-    sender: 'system@example.com',
-    content: 'Welcome to the email application!',
-    date: new Date().toISOString(),
-    read: false
-  }
+    from: 'john@example.com',
+    to: 'user@example.com',
+    subject: 'Weekly Report',
+    body: 'Here is the weekly report you requested...',
+    date: '2025-01-30T10:00:00',
+    read: true,
+    folder: 'inbox'
+  },
+  {
+    id: 2,
+    from: 'user@example.com',
+    to: 'sarah@example.com',
+    subject: 'Meeting Tomorrow',
+    body: 'Looking forward to our meeting tomorrow...',
+    date: '2025-01-30T09:30:00',
+    read: true,
+    folder: 'sent'
+  },
+  // Add more mock emails as needed
 ];
 
-export default function App() {
-  const [emails, setEmails] = useState(initialEmails);
+const App = () => {
+  const [emails, setEmails] = useState(mockEmails);
   const [selectedEmail, setSelectedEmail] = useState(null);
-  const [isComposing, setIsComposing] = useState(false);
+  const [currentFolder, setCurrentFolder] = useState('inbox');
+  const [showCompose, setShowCompose] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSelectEmail = (email) => {
-    setSelectedEmail(email);
-    if (!email.read) {
-      setEmails(emails.map(e => 
-        e.id === email.id ? { ...e, read: true } : e
-      ));
-    }
+  // Filter emails based on current folder and search query
+  const filteredEmails = emails
+    .filter(email => email.folder === currentFolder)
+    .filter(email => 
+      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.body.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  const handleCompose = () => {
+    setShowCompose(true);
+    setSelectedEmail(null);
   };
 
-  const handleSendEmail = (emailData) => {
-    const newEmail = {
-      id: Date.now(),
-      ...emailData,
-      sender: 'you@example.com',
+  const handleSendEmail = (newEmail) => {
+    const emailToSend = {
+      id: emails.length + 1,
+      ...newEmail,
       date: new Date().toISOString(),
-      read: true
+      read: true,
+      folder: 'sent'
     };
-    setEmails([newEmail, ...emails]);
-    setIsComposing(false);
+    setEmails([...emails, emailToSend]);
+    setShowCompose(false);
+  };
+
+  const handleDeleteEmail = (emailId) => {
+    setEmails(emails.map(email => 
+      email.id === emailId 
+        ? { ...email, folder: 'trash' }
+        : email
+    ));
+    setSelectedEmail(null);
+  };
+
+  const markAsRead = (emailId) => {
+    setEmails(emails.map(email =>
+      email.id === emailId
+        ? { ...email, read: true }
+        : email
+    ));
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
-      <div className="w-80 border-r bg-white overflow-y-auto">
-        <div className="p-4 border-b">
-          <button
-            onClick={() => setIsComposing(true)}
-            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Compose
-          </button>
-        </div>
-        <EmailList
-          emails={emails}
-          selectedId={selectedEmail?.id}
-          onSelectEmail={handleSelectEmail}
-        />
-      </div>
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar 
+        currentFolder={currentFolder}
+        setCurrentFolder={setCurrentFolder}
+        onCompose={handleCompose}
+        folders={[
+          { id: 'inbox', name: 'Inbox', count: emails.filter(e => e.folder === 'inbox').length },
+          { id: 'sent', name: 'Sent', count: emails.filter(e => e.folder === 'sent').length },
+          { id: 'drafts', name: 'Drafts', count: emails.filter(e => e.folder === 'drafts').length },
+          { id: 'trash', name: 'Trash', count: emails.filter(e => e.folder === 'trash').length }
+        ]}
+      />
       
-      <div className="flex-1 bg-white overflow-y-auto">
-        {selectedEmail ? (
-          <EmailDetail email={selectedEmail} />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            Select an email to read
-          </div>
-        )}
+      <div className="flex-1 flex flex-col">
+        <div className="bg-white p-4 shadow">
+          <input
+            type="text"
+            placeholder="Search emails..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:border-blue-500"
+          />
+        </div>
+        
+        <div className="flex-1 flex overflow-hidden">
+          <EmailList
+            emails={filteredEmails}
+            selectedEmail={selectedEmail}
+            onSelectEmail={setSelectedEmail}
+            onMarkAsRead={markAsRead}
+          />
+          
+          {selectedEmail && (
+            <EmailView
+              email={emails.find(e => e.id === selectedEmail)}
+              onDelete={handleDeleteEmail}
+              onClose={() => setSelectedEmail(null)}
+            />
+          )}
+          
+          {showCompose && (
+            <ComposeEmail
+              onSend={handleSendEmail}
+              onClose={() => setShowCompose(false)}
+            />
+          )}
+        </div>
       </div>
-
-      {isComposing && (
-        <ComposeEmail
-          onSubmit={handleSendEmail}
-          onCancel={() => setIsComposing(false)}
-        />
-      )}
     </div>
   );
-}
+};
+
+export default App;

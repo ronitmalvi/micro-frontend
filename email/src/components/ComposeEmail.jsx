@@ -1,51 +1,68 @@
-import { useState } from 'react';
+import React, {useState} from "react";
 
-export default function ComposeEmail({ onSubmit, onCancel }) {
+const ComposeEmail = ({ onSend, onClose }) => {
   const [email, setEmail] = useState({
-    recipient: '',
+    to: '',
     subject: '',
-    content: ''
+    body: ''
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(email);
+    onSend({
+      from: 'user@example.com', // Replace with actual user email
+      ...email
+    });
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg w-full max-w-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">New Email</h2>
+      <div className="bg-white rounded-lg w-full max-w-2xl">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h3 className="text-lg font-semibold">New Message</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            ✕
+          </button>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="To"
-            value={email.recipient}
-            onChange={(e) => setEmail({ ...email, recipient: e.target.value })}
-            className="w-full p-2 border rounded"
-          />
+        <form onSubmit={handleSubmit} className="p-4">
+          <div className="mb-4">
+            <input
+              type="email"
+              placeholder="To"
+              value={email.to}
+              onChange={e => setEmail({ ...email, to: e.target.value })}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
           
-          <input
-            type="text"
-            placeholder="Subject"
-            value={email.subject}
-            onChange={(e) => setEmail({ ...email, subject: e.target.value })}
-            className="w-full p-2 border rounded"
-          />
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Subject"
+              value={email.subject}
+              onChange={e => setEmail({ ...email, subject: e.target.value })}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
           
-          <textarea
-            placeholder="Message"
-            value={email.content}
-            onChange={(e) => setEmail({ ...email, content: e.target.value })}
-            className="w-full p-2 border rounded h-48"
-          />
+          <div className="mb-4">
+            <textarea
+              placeholder="Message"
+              value={email.body}
+              onChange={e => setEmail({ ...email, body: e.target.value })}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500 min-h-[200px]"
+              required
+            />
+          </div>
           
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end space-x-2">
             <button
               type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-500 hover:bg-gray-50 rounded"
             >
               Cancel
             </button>
@@ -60,4 +77,6 @@ export default function ComposeEmail({ onSubmit, onCancel }) {
       </div>
     </div>
   );
-}
+};
+
+export default ComposeEmail;

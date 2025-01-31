@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function ChatInput({ onSendMessage, isTyping, setIsTyping }) {
+export default function ChatInput({ onSendMessage, onTyping }) {
   const [message, setMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    const typingTimeout = setTimeout(() => {
+      if (isTyping) {
+        setIsTyping(false);
+        onTyping(false);
+      }
+    }, 2000);
+
+    return () => clearTimeout(typingTimeout);
+  }, [message, isTyping, onTyping]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -9,15 +21,15 @@ export default function ChatInput({ onSendMessage, isTyping, setIsTyping }) {
       onSendMessage(message);
       setMessage('');
       setIsTyping(false);
+      onTyping(false);
     }
   };
 
   const handleChange = (e) => {
     setMessage(e.target.value);
-    if (!isTyping && e.target.value) {
+    if (!isTyping) {
       setIsTyping(true);
-    } else if (isTyping && !e.target.value) {
-      setIsTyping(false);
+      onTyping(true);
     }
   };
 
