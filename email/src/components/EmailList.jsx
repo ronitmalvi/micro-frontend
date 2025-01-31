@@ -1,34 +1,37 @@
-import React from "react"; 
+import React from 'react';
 
-const EmailList = ({ emails, selectedEmail, onSelectEmail, onMarkAsRead }) => {
+export default function EmailList({ emails, onEmailSelect, currentFolder }) {
+  if (!emails.length) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-gray-500">
+        No emails in {currentFolder}
+      </div>
+    );
+  }
+
   return (
-    <div className="w-1/3 border-r overflow-y-auto">
+    <div className="flex-1 overflow-auto">
       {emails.map(email => (
         <div
           key={email.id}
-          onClick={() => {
-            onSelectEmail(email.id);
-            onMarkAsRead(email.id);
-          }}
-          className={`p-4 border-b cursor-pointer ${
-            selectedEmail === email.id ? 'bg-blue-50' : 'hover:bg-gray-50'
-          } ${!email.read ? 'font-semibold' : ''}`}
+          onClick={() => onEmailSelect(email)}
+          className={`p-4 border-b cursor-pointer hover:bg-gray-50
+            ${!email.read ? 'font-semibold bg-blue-50' : ''}`}
         >
-          <div className="flex justify-between items-start mb-1">
-            <span className="text-sm font-medium">{email.from}</span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">
+              {currentFolder === 'sent' ? `To: ${email.to}` : `From: ${email.from}`}
+            </span>
             <span className="text-xs text-gray-500">
-              {new Date(email.date).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
+              {new Date(email.date).toLocaleString()}
             </span>
           </div>
-          <div className="text-sm font-medium mb-1">{email.subject}</div>
-          <div className="text-sm text-gray-600 truncate">{email.body}</div>
+          <div className="text-base mt-1">{email.subject}</div>
+          <div className="text-sm text-gray-600 truncate mt-1">
+            {email.content}
+          </div>
         </div>
       ))}
     </div>
   );
-};
-
-export default EmailList;
+}

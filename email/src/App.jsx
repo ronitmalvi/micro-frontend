@@ -1,135 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
+import EmailSidebar from './components/EmailSidebar';
 import EmailList from './components/EmailList';
-import EmailView from './components/EmailView';
+import EmailDetail from './components/EmailDetail';
 import ComposeEmail from './components/ComposeEmail';
 
-// Mock data - replace with API calls in production
-const mockEmails = [
-  {
-    id: 1,
-    from: 'john@example.com',
-    to: 'user@example.com',
-    subject: 'Weekly Report',
-    body: 'Here is the weekly report you requested...',
-    date: '2025-01-30T10:00:00',
-    read: true,
-    folder: 'inbox'
-  },
-  {
-    id: 2,
-    from: 'user@example.com',
-    to: 'sarah@example.com',
-    subject: 'Meeting Tomorrow',
-    body: 'Looking forward to our meeting tomorrow...',
-    date: '2025-01-30T09:30:00',
-    read: true,
-    folder: 'sent'
-  },
-  // Add more mock emails as needed
+
+const initialEmails = [
 ];
 
-const App = () => {
-  const [emails, setEmails] = useState(mockEmails);
+export default function App() {
+  const [emails, setEmails] = useState(initialEmails);
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [currentFolder, setCurrentFolder] = useState('inbox');
-  const [showCompose, setShowCompose] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [composing, setComposing] = useState(false);
+  const [replyToEmail, setReplyToEmail] = useState(null);
 
-  // Filter emails based on current folder and search query
-  const filteredEmails = emails
-    .filter(email => email.folder === currentFolder)
-    .filter(email => 
-      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.body.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-  const handleCompose = () => {
-    setShowCompose(true);
+  const handleFolderChange = (folder) => {
+    setCurrentFolder(folder);
     setSelectedEmail(null);
+    if (folder === 'compose') {
+      setComposing(true);
+    }
   };
 
-  const handleSendEmail = (newEmail) => {
-    const emailToSend = {
-      id: emails.length + 1,
-      ...newEmail,
-      date: new Date().toISOString(),
-      read: true,
-      folder: 'sent'
-    };
-    setEmails([...emails, emailToSend]);
-    setShowCompose(false);
+  const handleEmailSelect = (email) => {
+    setSelectedEmail(email);
+    if (!email.read) {
+      setEmails(emails.map(e => 
+        e.id === email.id ? { ...e, read: true } : e
+      ));
+    }
   };
 
-  const handleDeleteEmail = (emailId) => {
-    setEmails(emails.map(email => 
-      email.id === emailId 
-        ? { ...email, folder: 'trash' }
-        : email
-    ));
-    setSelectedEmail(null);
+  const handleComposeDone = (newEmail) => {
+    if (newEmail) {
+      setEmails([
+        { ...newEmail, folder: 'sent' },
+        ...emails
+      ]);
+    }
+    setComposing(false);
+    setReplyToEmail(null);
   };
 
-  const markAsRead = (emailId) => {
+  const handleReply = (email) => {
+    setReplyToEmail(email);
+    setComposing(true);
+  };
+
+  const handleDelete = (emailId) => {
     setEmails(emails.map(email =>
-      email.id === emailId
-        ? { ...email, read: true }
-        : email
+      email.id === emailId ? { ...email, folder: 'trash' } : email
     ));
+    setSelectedEmail(null);
   };
+
+  const filteredEmails = emails.filter(email => email.folder === currentFolder);
+  const unreadCount = emails.filter(email => !email.read && email.folder === 'inbox').length;
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar 
+    <div className="h-[calc(100vh-4rem)] flex bg-white shadow-lg rounded-lg overflow-hidden">
+      <EmailSidebar
         currentFolder={currentFolder}
-        setCurrentFolder={setCurrentFolder}
-        onCompose={handleCompose}
-        folders={[
-          { id: 'inbox', name: 'Inbox', count: emails.filter(e => e.folder === 'inbox').length },
-          { id: 'sent', name: 'Sent', count: emails.filter(e => e.folder === 'sent').length },
-          { id: 'drafts', name: 'Drafts', count: emails.filter(e => e.folder === 'drafts').length },
-          { id: 'trash', name: 'Trash', count: emails.filter(e => e.folder === 'trash').length }
-        ]}
+        onFolderChange={handleFolderChange}
+        unreadCount={unreadCount}
       />
       
-      <div className="flex-1 flex flex-col">
-        <div className="bg-white p-4 shadow">
-          <input
-            type="text"
-            placeholder="Search emails..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:border-blue-500"
-          />
-        </div>
+      <div className="flex-1 flex">
+        <EmailList
+          emails={filteredEmails}
+          onEmailSelect={handleEmailSelect}
+          currentFolder={currentFolder}
+        />
         
-        <div className="flex-1 flex overflow-hidden">
-          <EmailList
-            emails={filteredEmails}
-            selectedEmail={selectedEmail}
-            onSelectEmail={setSelectedEmail}
-            onMarkAsRead={markAsRead}
+        <div className="flex-1 border-l">
+          <EmailDetail
+            email={selectedEmail}
+            onReply={handleReply}
+            onDelete={handleDelete}
           />
-          
-          {selectedEmail && (
-            <EmailView
-              email={emails.find(e => e.id === selectedEmail)}
-              onDelete={handleDeleteEmail}
-              onClose={() => setSelectedEmail(null)}
-            />
-          )}
-          
-          {showCompose && (
-            <ComposeEmail
-              onSend={handleSendEmail}
-              onClose={() => setShowCompose(false)}
-            />
-          )}
         </div>
       </div>
+
+      {composing && (
+        <ComposeEmail
+          onClose={handleComposeDone}
+          replyTo={replyToEmail}
+        />
+      )}
     </div>
   );
-};
-
-export default App;
+}
