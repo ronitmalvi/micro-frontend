@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React,{ useState } from 'react';
 import EmailList from './components/EmailList';
 import EmailDetail from './components/EmailDetail';
 import ComposeEmail from './components/ComposeEmail';

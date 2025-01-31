@@ -1,11 +1,17 @@
+// src/App.jsx
 import React,{ Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 
-const ChatApp = React.lazy(() => import('chatApp/App'));
-const EmailApp = React.lazy(() => import('emailApp/App'));
+const ChatApp = React.lazy(() => import('chatApp/App').catch(() => ({
+  default: () => <div>Error loading Chat App</div>
+})));
+
+const EmailApp = React.lazy(() => import('emailApp/App').catch(() => ({
+  default: () => <div>Error loading Email App</div>
+})));
 
 export default function App() {
   return (

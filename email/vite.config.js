@@ -9,18 +9,19 @@ export default defineConfig({
       name: 'emailApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App.jsx'
+        './App': './src/App'
       },
       shared: ['react', 'react-dom']
     })
   ],
   build: {
-    modulePreload: false,
     target: 'esnext',
     minify: false,
     cssCodeSplit: false
   },
   server: {
-    port: 5002
+    port: 5002,
+    origin: 'http://localhost:5002',
+    cors: true
   }
 });

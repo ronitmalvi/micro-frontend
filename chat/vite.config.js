@@ -9,18 +9,19 @@ export default defineConfig({
       name: 'chatApp',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App.jsx'
+        './App': './src/App'
       },
       shared: ['react', 'react-dom']
     })
   ],
   build: {
-    modulePreload: false,
     target: 'esnext',
     minify: false,
     cssCodeSplit: false
   },
   server: {
-    port: 5001
+    port: 5001,
+    origin: 'http://localhost:5001',
+    cors: true
   }
 });

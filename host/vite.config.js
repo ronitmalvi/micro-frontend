@@ -10,22 +10,19 @@ export default defineConfig({
       remotes: {
         chatApp: {
           external: 'http://localhost:5001/assets/remoteEntry.js',
-          from: 'vite',
-          format: 'esm'
+          format: 'esm',
+          from: 'vite'
         },
         emailApp: {
           external: 'http://localhost:5002/assets/remoteEntry.js',
-          from: 'vite',
-          format: 'esm'
+          format: 'esm',
+          from: 'vite'
         }
       },
       shared: ['react', 'react-dom', 'react-router-dom']
     })
   ],
-  build: {
-    modulePreload: false,
-    target: 'esnext',
-    minify: false,
-    cssCodeSplit: false
+  server: {
+    port: 5000
   }
 });
