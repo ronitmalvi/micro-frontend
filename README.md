@@ -81,7 +81,7 @@ micro-frontend/
    cd chat
    npm install
    npm run build
-   npm run preview -- --port 5001 //since the module federation wasn't working with only npm run dev
+   npm run preview -- --port 5001 #since the module federation wasn't working with only npm run dev
    ```
 
 5. **Run the Email Application**:
@@ -90,7 +90,7 @@ micro-frontend/
    cd email
    npm install
    npm run build
-   npm run preview -- --port 5002 //since the module federation wasn't working with only npm run dev
+   npm run preview -- --port 5002 #since the module federation wasn't working with only npm run dev
    ```
 
 6. **Run the Host Application**:
