@@ -17,14 +17,14 @@ export default function ComposeEmail({ replyTo, onClose, onSend }){
 
     try {
       await emailjs.send(
-        'service_l7hdu0h',
-        'template_aosmxqr',
+        'SERVICE_ID',
+        'TEMPLATE_ID',
         {
           to_email: email.to,
           subject: email.subject,
           message: email.content,
         },
-        'HMFLUKS7uM4oOsdpF'
+        'PUBLIC_KEY'
       );
 
       onSend({
