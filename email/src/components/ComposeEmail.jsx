@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Paperclip, Inbox, Star, Trash2, Reply, MoreVertical, SendHorizontal, File, PenSquare } from 'lucide-react';
 import emailjs from '@emailjs/browser';
-import GaugeChart from 'react-gauge-chart';
 
 export default function ComposeEmail({ replyTo, onClose, onSend }){
   const [email, setEmail] = useState({
@@ -56,12 +55,6 @@ export default function ComposeEmail({ replyTo, onClose, onSend }){
             <X className="w-5 h-5" />
           </button>
         </div>
-            <GaugeChart id="gauge-chart3" 
-            nrOfLevels={30} 
-            colors={["#FF5F6D", "#FFC371"]} 
-            arcWidth={0.3} 
-            percent={0.37} 
-          />
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <input
